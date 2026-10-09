@@ -1,5 +1,4 @@
 using Aprillz.MewUI.Rendering;
-using System.Runtime.CompilerServices;
 
 namespace Aprillz.MewUI.Controls;
 
@@ -26,7 +25,7 @@ internal sealed class TemplatedItemsHost : IDisposable
     private readonly Action _invalidateMeasureAndVisual;
 
     private IDataTemplate _itemTemplate;
-    private readonly ConditionalWeakTable<FrameworkElement, TemplateContext> _contexts = new();
+    private readonly TemplateContextTable _contexts = new();
     private readonly Action<FrameworkElement>? _recycle;
 
     public ItemsRangeLayout Layout;
@@ -134,34 +133,14 @@ internal sealed class TemplatedItemsHost : IDisposable
             Layout.ItemBindingGeneration);
     }
 
-    private FrameworkElement CreateItemContainer()
-    {
-        var ctx = new TemplateContext();
-        var view = _itemTemplate.Build(ctx);
-        _contexts.Add(view, ctx);
-        return view;
-    }
+    private FrameworkElement CreateItemContainer() => _contexts.Build(_itemTemplate);
 
     private void BindItemContainer(FrameworkElement element, int index)
-    {
-        var item = _getItem(index);
-
-        if (!_contexts.TryGetValue(element, out var ctx))
-        {
-            ctx = new TemplateContext();
-            _contexts.Add(element, ctx);
-        }
-
-        ctx.BindTemplate(element, _itemTemplate, item, index);
-    }
+        => _contexts.Bind(element, _itemTemplate, _getItem(index), index);
 
     private void UnbindItemContainer(FrameworkElement element)
     {
-        if (_contexts.TryGetValue(element, out var ctx))
-        {
-            ctx.UnbindTemplate(element);
-        }
-
+        _contexts.Unbind(element);
         _recycle?.Invoke(element);
     }
 }

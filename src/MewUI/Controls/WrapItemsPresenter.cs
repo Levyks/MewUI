@@ -106,7 +106,7 @@ internal sealed class WrapItemsPresenter : Control, IItemsPresenter
                 InvalidateMeasure();
                 InvalidateVisual();
             },
-            template: CreateDefaultItemTemplate());
+            template: DefaultItemTemplates.IndexPlaceholder);
     }
 
     public Size Extent => _extent;
@@ -395,12 +395,4 @@ internal sealed class WrapItemsPresenter : Control, IItemsPresenter
         _itemsHost.Dispose();
         base.OnDispose();
     }
-
-    private static IDataTemplate CreateDefaultItemTemplate()
-        => new DelegateTemplate<object?>(
-            build: _ => new TextBlock(),
-            bind: (view, _, index, _) =>
-            {
-                if (view is TextBlock label) label.Text = index.ToString();
-            });
 }

@@ -603,10 +603,7 @@ public class NavigationList : ScrollableItemsBase, ISelector, IIndexedSelector
             bind: (view, _, index, _) =>
             {
                 var tb = (TextBlock)view;
-                var text = ItemsSource.GetText(index);
-                if (tb.Text != text) tb.Text = text;
-                if (tb.FontFamily != FontFamily) tb.FontFamily = FontFamily;
-                if (!tb.FontSize.Equals(FontSize)) tb.FontSize = FontSize;
+                DefaultItemTemplates.SyncTextAndFont(tb, ItemsSource.GetText(index), this);
             });
 
     protected override void OnDispose()

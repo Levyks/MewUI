@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using Aprillz.MewUI.Rendering;
 
 namespace Aprillz.MewUI.Controls;
@@ -11,7 +10,7 @@ internal sealed class StackItemsPresenter : Control, IItemsPresenter
 {
     private readonly List<FrameworkElement> _containers = new();
     private readonly Stack<FrameworkElement> _pool = new();
-    private readonly ConditionalWeakTable<FrameworkElement, TemplateContext> _contexts = new();
+    private readonly TemplateContextTable _contexts = new();
     private readonly Dictionary<FrameworkElement, uint> _itemBindingGenerations = new();
     private readonly List<double> _measuredHeights = new();
     private readonly List<int> _arrangedItems = new();
@@ -137,7 +136,7 @@ internal sealed class StackItemsPresenter : Control, IItemsPresenter
 
     public StackItemsPresenter()
     {
-        _itemTemplate = CreateDefaultItemTemplate();
+        _itemTemplate = DefaultItemTemplates.IndexPlaceholder;
     }
 
     // IScrollContent
@@ -598,34 +597,12 @@ internal sealed class StackItemsPresenter : Control, IItemsPresenter
         InvalidateVisual();
     }
 
-    private FrameworkElement CreateContainer()
-    {
-        var ctx = new TemplateContext();
-        var view = _itemTemplate.Build(ctx);
-        _contexts.Add(view, ctx);
-        return view;
-    }
+    private FrameworkElement CreateContainer() => _contexts.Build(_itemTemplate);
 
     private void BindContainer(FrameworkElement element, int index)
-    {
-        var item = _itemsSource.GetItem(index);
+        => _contexts.Bind(element, _itemTemplate, _itemsSource.GetItem(index), index);
 
-        if (!_contexts.TryGetValue(element, out var ctx))
-        {
-            ctx = new TemplateContext();
-            _contexts.Add(element, ctx);
-        }
-
-        ctx.BindTemplate(element, _itemTemplate, item, index);
-    }
-
-    private void UnbindContainer(FrameworkElement element)
-    {
-        if (_contexts.TryGetValue(element, out var ctx))
-        {
-            ctx.UnbindTemplate(element);
-        }
-    }
+    private void UnbindContainer(FrameworkElement element) => _contexts.Unbind(element);
 
     protected override void OnDispose()
     {
@@ -634,15 +611,4 @@ internal sealed class StackItemsPresenter : Control, IItemsPresenter
         _pool.Clear();
         base.OnDispose();
     }
-
-    private static IDataTemplate CreateDefaultItemTemplate()
-        => new DelegateTemplate<object?>(
-            build: _ => new TextBlock(),
-            bind: (view, _, index, _) =>
-            {
-                if (view is TextBlock label)
-                {
-                    label.Text = index.ToString();
-                }
-            });
 }

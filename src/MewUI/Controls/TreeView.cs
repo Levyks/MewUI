@@ -949,26 +949,7 @@ public sealed partial class TreeView : Control, ISubtreeInvalidationHost, IFocus
             {
                 var tb = (TextBlock)view;
 
-                var text = _itemsSource.GetText(index);
-                if (tb.Text != text)
-                {
-                    tb.Text = text;
-                }
-
-                if (tb.FontFamily != FontFamily)
-                {
-                    tb.FontFamily = FontFamily;
-                }
-
-                if (!tb.FontSize.Equals(FontSize))
-                {
-                    tb.FontSize = FontSize;
-                }
-
-                if (tb.FontWeight != FontWeight)
-                {
-                    tb.FontWeight = FontWeight;
-                }
+                DefaultItemTemplates.SyncTextAndFont(tb, _itemsSource.GetText(index), this);
 
                 var enabled = IsEffectivelyEnabled;
                 if (tb.IsEnabled != enabled)

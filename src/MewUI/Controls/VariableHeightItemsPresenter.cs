@@ -13,7 +13,7 @@ namespace Aprillz.MewUI.Controls;
 /// </remarks>
 internal sealed class VariableHeightItemsPresenter : Control, IItemsPresenter
 {
-    private readonly Dictionary<FrameworkElement, TemplateContext> _contexts = new();
+    private readonly TemplateContextTable _contexts = new();
 
     private readonly Dictionary<int, FrameworkElement> _realized = new();
     private readonly Dictionary<FrameworkElement, uint> _itemBindingGenerations = new();
@@ -152,13 +152,12 @@ internal sealed class VariableHeightItemsPresenter : Control, IItemsPresenter
             RecycleAll();
             _pool.Clear();
             _recycledByIndex.Clear();
-            _contexts.Clear();
             _itemTemplate = value;
             InvalidateMeasure();
             InvalidateVisual();
         }
     }
-    private IDataTemplate _itemTemplate = CreateDefaultItemTemplate();
+    private IDataTemplate _itemTemplate = DefaultItemTemplates.IndexPlaceholder;
 
     public double EstimatedItemHeight
     {
@@ -1114,34 +1113,12 @@ internal sealed class VariableHeightItemsPresenter : Control, IItemsPresenter
         }
     }
 
-    private FrameworkElement CreateItemContainer()
-    {
-        var ctx = new TemplateContext();
-        var view = ItemTemplate.Build(ctx);
-        _contexts.Add(view, ctx);
-        return view;
-    }
+    private FrameworkElement CreateItemContainer() => _contexts.Build(ItemTemplate);
 
     private void BindItemContainer(FrameworkElement element, int index)
-    {
-        var item = ItemsSource.GetItem(index);
+        => _contexts.Bind(element, ItemTemplate, ItemsSource.GetItem(index), index);
 
-        if (!_contexts.TryGetValue(element, out var ctx))
-        {
-            ctx = new TemplateContext();
-            _contexts.Add(element, ctx);
-        }
-
-        ctx.BindTemplate(element, ItemTemplate, item, index);
-    }
-
-    private void UnbindItemContainer(FrameworkElement element)
-    {
-        if (_contexts.TryGetValue(element, out var ctx))
-        {
-            ctx.UnbindTemplate(element);
-        }
-    }
+    private void UnbindItemContainer(FrameworkElement element) => _contexts.Unbind(element);
 
     private FrameworkElement GetOrCreate(int index, uint itemBindingGeneration)
     {
@@ -1706,15 +1683,4 @@ internal sealed class VariableHeightItemsPresenter : Control, IItemsPresenter
         ClearDeferredFocus();
         base.OnDispose();
     }
-
-    private static IDataTemplate CreateDefaultItemTemplate()
-        => new DelegateTemplate<object?>(
-            build: _ => new TextBlock(),
-            bind: (view, _, index, _) =>
-            {
-                if (view is TextBlock label)
-                {
-                    label.Text = index.ToString();
-                }
-            });
 }
