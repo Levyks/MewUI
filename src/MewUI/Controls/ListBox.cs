@@ -193,6 +193,17 @@ public partial class ListBox : ScrollableItemsBase, IVirtualizedTabNavigationHos
     internal void VisitRealizedContainers(Action<int, FrameworkElement> visitor) => _presenter.VisitRealized(visitor);
 
     /// <summary>
+    /// Gets the container currently showing the item at <paramref name="index"/>. False when that
+    /// item is not realized, which is the normal state of one scrolled out of view.
+    /// </summary>
+    /// <remarks>
+    /// Containers are recycled: use the result at once rather than keeping it, since it may hold
+    /// another item after the next layout.
+    /// </remarks>
+    public bool TryGetContainer(int index, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out ItemContainer? container)
+        => TryFindRealizedContainer(_presenter, index, out container);
+
+    /// <summary>
     /// Gets the currently selected item text.
     /// </summary>
     public string? SelectedText => SelectedIndex >= 0 && SelectedIndex < ItemsSource.Count ? ItemsSource.GetText(SelectedIndex) : null;

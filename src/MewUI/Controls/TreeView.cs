@@ -423,6 +423,18 @@ public sealed partial class TreeView : Control, ISubtreeInvalidationHost, IFocus
     internal void VisitRealizedContainers(Action<int, FrameworkElement> visitor)
         => _presenter.VisitRealized(visitor);
 
+    /// <summary>
+    /// Gets the container currently showing the visible row at <paramref name="index"/>, counted
+    /// over the expanded nodes. False when that row is not realized, which is the normal state of
+    /// one scrolled out of view.
+    /// </summary>
+    /// <remarks>
+    /// Containers are recycled: use the result at once rather than keeping it, since it may hold
+    /// another node after the next layout.
+    /// </remarks>
+    public bool TryGetContainer(int index, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out ItemContainer? container)
+        => ScrollableItemsBase.TryFindRealizedContainer(_presenter, index, out container);
+
     public static readonly MewProperty<double> IndentProperty =
         MewProperty<double>.Register<TreeView>(nameof(Indent), 16.0,
             MewPropertyOptions.AffectsLayout,

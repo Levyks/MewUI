@@ -324,6 +324,17 @@ public class NavigationList : ScrollableItemsBase, ISelector, IIndexedSelector
 
     private protected override bool IsItemSelectedForContainer(int index) => index == SelectedIndex;
 
+    /// <summary>
+    /// Gets the container currently showing the row at <paramref name="index"/>. False when that
+    /// row is not realized, which is the normal state of one scrolled out of view.
+    /// </summary>
+    /// <remarks>
+    /// Containers are recycled: use the result at once rather than keeping it, since it may hold
+    /// another row after the next layout.
+    /// </remarks>
+    public bool TryGetContainer(int index, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out ItemContainer? container)
+        => TryFindRealizedContainer(_presenter, index, out container);
+
     private protected override void ReapplyItemTemplate()
         => _presenter.ItemTemplate = WrapItemTemplate(new RowTemplate(this, _itemTemplate));
 

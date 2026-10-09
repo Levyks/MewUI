@@ -123,6 +123,17 @@ public sealed partial class ItemsControl : ScrollableItemsBase
 
     private protected override void ReapplyItemTemplate() => _presenter.ItemTemplate = WrapItemTemplate(_itemTemplate);
 
+    /// <summary>
+    /// Gets the container currently showing the item at <paramref name="index"/>. False when that
+    /// item is not realized, which is the normal state of one scrolled out of view.
+    /// </summary>
+    /// <remarks>
+    /// Containers are recycled: use the result at once rather than keeping it, since it may hold
+    /// another item after the next layout.
+    /// </remarks>
+    public bool TryGetContainer(int index, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out ItemContainer? container)
+        => TryFindRealizedContainer(_presenter, index, out container);
+
     public ItemsControl()
     {
         _itemsSource.Changed += OnItemsChanged;

@@ -1202,6 +1202,17 @@ public sealed partial class GridView : ScrollableItemsBase, IFocusIntoViewHost, 
         InvalidateItemBindings();
     }
 
+    /// <summary>
+    /// Gets the row currently showing the item at <paramref name="index"/>. False when that item
+    /// is not realized, which is the normal state of one scrolled out of view.
+    /// </summary>
+    /// <remarks>
+    /// Rows are recycled: use the result at once rather than keeping it, since it may hold another
+    /// item after the next layout.
+    /// </remarks>
+    public bool TryGetContainer(int index, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out GridViewRow? row)
+        => TryFindRealizedContainer(_presenter, index, out row);
+
     /// <summary>Visits the rows currently realized, with their item index.</summary>
     internal void VisitRealizedRows(Action<int, GridViewRow> visitor)
         => _presenter.VisitRealized((index, element) =>

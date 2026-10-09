@@ -91,6 +91,29 @@ public sealed class GridViewRow : Control, IVisualTreeHost, ICommandArgumentSour
 
     object? ICommandArgumentSource.CommandArgument => Item;
 
+    /// <summary>
+    /// Gets the view a column's cell template built for this row, and the template context that
+    /// names its elements. False when the row has no cell at that column index.
+    /// </summary>
+    public bool TryGetCell(
+        int columnIndex,
+        [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out FrameworkElement? view,
+        [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out TemplateContext? context)
+    {
+        if (columnIndex >= 0 && columnIndex < _cells.Count)
+        {
+            view = _cells[columnIndex].View;
+            context = _cells[columnIndex].Context;
+            return true;
+        }
+        else
+        {
+            view = null;
+            context = null;
+            return false;
+        }
+    }
+
     internal void SetIsSelected(bool isSelected)
     {
         if (IsSelected != isSelected)

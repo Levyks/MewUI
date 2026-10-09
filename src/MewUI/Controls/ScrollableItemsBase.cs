@@ -275,6 +275,26 @@ public abstract partial class ScrollableItemsBase : Control, ISubtreeInvalidatio
         }
     }
 
+    /// <summary>Finds the realized container bound to an item index, if it is of the given type.</summary>
+    internal static bool TryFindRealizedContainer<TContainer>(
+        IItemsPresenter presenter,
+        int index,
+        [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out TContainer? container)
+        where TContainer : FrameworkElement
+    {
+        TContainer? found = null;
+        presenter.VisitRealized((realizedIndex, element) =>
+        {
+            if (realizedIndex == index && element is TContainer typed)
+            {
+                found = typed;
+            }
+        });
+
+        container = found;
+        return found != null;
+    }
+
     /// <summary>
     /// Finds the realized index and container whose subtree contains <paramref name="focusedElement"/>.
     /// Shared by TryMoveFocusFromDescendant/OnDescendantFocused across the list controls.
