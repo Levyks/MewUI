@@ -13,10 +13,13 @@ internal static class NumericUpDownTemplate
 
     /// <summary>Gets the shared template definition; each control that applies it builds its own tree.</summary>
     public static DelegateControlTemplate<NumericUpDown> Instance
-        => _instance ??= new DelegateControlTemplate<NumericUpDown>(Build);
+        => _instance ??= new DelegateControlTemplate<NumericUpDown>(Build)
+        {
+            // Build reads the separator color, the column widths and the scale into the tree.
+            RebuildOnThemeChange = true,
+            RebuildOnDpiChange = true,
+        };
 
-    // Build reads theme and DPI at build time; Control invalidates template instances on either
-    // change, so a rebuilt tree always bakes the current metrics, colors and scale.
     private static Element Build(NumericUpDown owner, ControlTemplateContext ctx)
     {
         var theme = owner.ThemeInternal;

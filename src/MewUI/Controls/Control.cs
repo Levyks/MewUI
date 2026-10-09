@@ -951,10 +951,11 @@ public abstract partial class Control : TextElement
         // Re-resolve style with new theme's palette colors.
         ResolveAndApplyStyle();
 
-        // A template instance is an artifact of the theme it was built under (builds may bake
-        // metrics/colors), so it is rebuilt lazily; deferring the detach keeps the theme
-        // broadcast walk from mutating the tree it is traversing.
-        InvalidateTemplateInstance();
+        if (Template?.RebuildOnThemeChange == true)
+        {
+            // Deferring the detach keeps the theme broadcast walk from mutating the tree it is traversing.
+            InvalidateTemplateInstance();
+        }
     }
 
     /// <summary>Marks the applied template instance for a lazy rebuild.</summary>
@@ -1068,8 +1069,10 @@ public abstract partial class Control : TextElement
     {
         base.OnDpiChanged(oldDpi, newDpi);
 
-        // Builds may bake device-pixel-snapped metrics, which the new scale invalidates.
-        InvalidateTemplateInstance();
+        if (Template?.RebuildOnDpiChange == true)
+        {
+            InvalidateTemplateInstance();
+        }
     }
 
     protected Color PickAccentBorder(Theme theme, Color baseBorder, in VisualState state, double hoverMix = 0.6)

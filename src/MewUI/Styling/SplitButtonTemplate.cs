@@ -36,7 +36,12 @@ internal static class SplitButtonTemplate
     private static DelegateControlTemplate<SplitButton> Create(
         Style? faceStyle,
         Func<Palette, Color> splitLineColorSelector)
-        => new((owner, ctx) => Build(owner, ctx, faceStyle, splitLineColorSelector));
+        => new((owner, ctx) => Build(owner, ctx, faceStyle, splitLineColorSelector))
+        {
+            // The hairline width is snapped to device pixels when the theme callback runs, which a
+            // scale change alone does not trigger.
+            RebuildOnDpiChange = true,
+        };
 
     private static Element Build(
         SplitButton owner,

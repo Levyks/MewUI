@@ -7,6 +7,26 @@ namespace Aprillz.MewUI.Controls;
 public abstract class ControlTemplate
 {
     /// <summary>
+    /// Gets whether an applied tree is discarded and built again when the theme changes. Set it for
+    /// a build that reads theme values into the tree instead of leaving them to styles and bindings.
+    /// </summary>
+    /// <remarks>
+    /// A rebuild replaces every part, so what a part held (text being edited, scroll offset, focus)
+    /// is lost. The default keeps the tree.
+    /// </remarks>
+    public bool RebuildOnThemeChange { get; init; }
+
+    /// <summary>
+    /// Gets whether an applied tree is discarded and built again when the DPI changes. Set it for a
+    /// build that computes device-pixel-snapped sizes into the tree.
+    /// </summary>
+    /// <remarks>
+    /// A rebuild replaces every part, so what a part held (text being edited, scroll offset, focus)
+    /// is lost. The default keeps the tree.
+    /// </remarks>
+    public bool RebuildOnDpiChange { get; init; }
+
+    /// <summary>
     /// Builds the visual tree for one control instance, registering named parts into
     /// <paramref name="context"/>, and returns the visual root.
     /// </summary>
