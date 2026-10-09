@@ -166,6 +166,45 @@ public sealed class TemplateContext : IDisposable
         _cleanup.Add(new EventCleanup<TSource, THandler>(source, remove, handler));
     }
 
+    /// <inheritdoc cref="Subscribe{TSource, THandler}(TSource, Action{TSource, THandler}, Action{TSource, THandler}, THandler)"/>
+    public void Subscribe<TSource>(
+        TSource source,
+        Action<TSource, Action> add,
+        Action<TSource, Action> remove,
+        Action handler)
+        where TSource : class
+        => Subscribe<TSource, Action>(source, add, remove, handler);
+
+    /// <inheritdoc cref="Subscribe{TSource, THandler}(TSource, Action{TSource, THandler}, Action{TSource, THandler}, THandler)"/>
+    public void Subscribe<TSource, TArg>(
+        TSource source,
+        Action<TSource, Action<TArg>> add,
+        Action<TSource, Action<TArg>> remove,
+        Action<TArg> handler)
+        where TSource : class
+        => Subscribe<TSource, Action<TArg>>(source, add, remove, handler);
+
+    /// <inheritdoc cref="Subscribe{TSource, THandler}(TSource, Action{TSource, THandler}, Action{TSource, THandler}, THandler)"/>
+    public void Subscribe<TSource, TEventArgs>(
+        TSource source,
+        Action<TSource, EventHandler<TEventArgs>> add,
+        Action<TSource, EventHandler<TEventArgs>> remove,
+        EventHandler<TEventArgs> handler)
+        where TSource : class
+        => Subscribe<TSource, EventHandler<TEventArgs>>(source, add, remove, handler);
+
+    /// <summary>
+    /// Subscribes to an object's property changes now and unsubscribes on the next <see cref="Reset"/>.
+    /// </summary>
+    public void Subscribe(
+        System.ComponentModel.INotifyPropertyChanged source,
+        System.ComponentModel.PropertyChangedEventHandler handler)
+        => Subscribe<System.ComponentModel.INotifyPropertyChanged, System.ComponentModel.PropertyChangedEventHandler>(
+            source,
+            static (target, value) => target.PropertyChanged += value,
+            static (target, value) => target.PropertyChanged -= value,
+            handler);
+
     /// <summary>
     /// Undoes every binding and subscription registered since the last reset, in reverse order of
     /// registration, then forgets them. Registered names are kept.
