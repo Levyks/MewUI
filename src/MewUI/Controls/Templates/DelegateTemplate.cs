@@ -26,41 +26,4 @@ public sealed class DelegateTemplate<TItem> : IDataTemplate<TItem>
 
     public void Unbind(FrameworkElement view, TItem item, int index, TemplateContext context)
         => _unbind?.Invoke(view, item, index, context);
-
-    void IDataTemplate.Bind(FrameworkElement view, object? item, int index, TemplateContext context)
-    {
-        if (item is null)
-        {
-            _bind(view, default!, index, context);
-            return;
-        }
-
-        if (item is not TItem typed)
-        {
-            throw new InvalidCastException($"Template expected item type '{typeof(TItem).Name}', but got '{item.GetType().Name}'.");
-        }
-
-        _bind(view, typed, index, context);
-    }
-
-    void IDataTemplate.Unbind(FrameworkElement view, object? item, int index, TemplateContext context)
-    {
-        if (_unbind == null)
-        {
-            return;
-        }
-
-        if (item is null)
-        {
-            _unbind(view, default!, index, context);
-            return;
-        }
-
-        if (item is not TItem typed)
-        {
-            throw new InvalidCastException($"Template expected item type '{typeof(TItem).Name}', but got '{item.GetType().Name}'.");
-        }
-
-        _unbind(view, typed, index, context);
-    }
 }
