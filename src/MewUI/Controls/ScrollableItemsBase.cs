@@ -100,8 +100,8 @@ public abstract partial class ScrollableItemsBase : Control, ISubtreeInvalidatio
     private PrepareContainerHandler<ItemContainer, object?>? _clearContainer;
 
     /// <summary>
-    /// Sets the container-prepare hook and rebuilds the containers, since their shape depends on
-    /// whether a hook is registered. Use the typed <c>PrepareContainer</c> extension.
+    /// Sets the container-prepare hook and rebuilds the containers so it runs for those already on
+    /// screen. Use the typed <c>PrepareContainer</c> extension.
     /// </summary>
     internal void SetPrepareContainer(PrepareContainerHandler<ItemContainer, object?>? hook)
     {

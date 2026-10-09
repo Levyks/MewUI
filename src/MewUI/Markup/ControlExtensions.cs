@@ -2681,8 +2681,8 @@ public static class ControlExtensions
 
     /// <summary>
     /// Configures the container of each item once its content is bound, so behavior can be attached
-    /// to the whole item rather than to the template. Registering a hook wraps each item in an
-    /// <see cref="ItemContainer"/>; without one no wrapper is created.
+    /// to the whole item rather than to the template. The container is the
+    /// <see cref="ItemContainer"/> the list box places around every item.
     /// </summary>
     /// <remarks>
     /// The callback runs on every bind, which includes scrolling an item back into view, so keep it
@@ -3420,8 +3420,8 @@ public static class ControlExtensions
     }
 
     /// <summary>
-    /// Configures the container of each item once its content is bound. Registering a hook wraps
-    /// each item in an <see cref="ItemContainer"/>; without one no wrapper is created.
+    /// Configures the container of each item once its content is bound. The container is the
+    /// <see cref="ItemContainer"/> the items control places around every item.
     /// </summary>
     /// <typeparam name="T">Item type.</typeparam>
     /// <param name="itemsControl">Target items control.</param>
@@ -3634,8 +3634,7 @@ public static class ControlExtensions
 
     /// <summary>
     /// Configures the container placed around each row once its content is bound, so behavior can be
-    /// attached to the whole row, indent and expander included, instead of to the template. Without
-    /// a hook the template root sits in the content area and no container exists.
+    /// attached to the whole row, indent and expander included, instead of to the template.
     /// </summary>
     /// <remarks>
     /// The callback runs on every bind, which includes scrolling a row back into view, so keep it

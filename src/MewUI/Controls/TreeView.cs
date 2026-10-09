@@ -326,8 +326,8 @@ public sealed partial class TreeView : Control, ISubtreeInvalidationHost, IFocus
     }
 
     /// <summary>
-    /// Sets the container-prepare hook and rebuilds the rows, since the container shape depends on
-    /// whether a hook is registered. Use the typed <c>PrepareContainer</c> extension.
+    /// Sets the container-prepare hook and rebuilds the rows so it runs for those already on screen.
+    /// Use the typed <c>PrepareContainer</c> extension.
     /// </summary>
     internal void SetPrepareContainer(PrepareContainerHandler<ItemContainer, object?>? hook)
     {
