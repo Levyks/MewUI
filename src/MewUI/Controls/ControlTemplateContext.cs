@@ -41,6 +41,36 @@ public sealed class ControlTemplateContext
     }
 
     /// <summary>
+    /// Keeps a target part property in sync with a converted property of <see cref="Owner"/>:
+    /// applies the converted current value now and converts each subsequent change. Released when
+    /// the template instance is discarded.
+    /// </summary>
+    /// <param name="target">The template part to update.</param>
+    /// <param name="targetProperty">The part property to write.</param>
+    /// <param name="sourceProperty">The owner property to follow.</param>
+    /// <param name="convert">Maps the owner value to the part value.</param>
+    public void Bind<TTarget, TSource>(
+        Element target,
+        MewProperty<TTarget> targetProperty,
+        MewProperty<TSource> sourceProperty,
+        Func<TSource, TTarget> convert)
+    {
+        ArgumentNullException.ThrowIfNull(target);
+        ArgumentNullException.ThrowIfNull(targetProperty);
+        ArgumentNullException.ThrowIfNull(sourceProperty);
+        ArgumentNullException.ThrowIfNull(convert);
+
+        target.PropertyStore.SetLocal(targetProperty, convert(Owner.PropertyStore.GetValue(sourceProperty)));
+        var entry = Owner.AddPropertyForward(
+            sourceProperty.Id,
+            target,
+            targetProperty,
+            ValueSource.Local,
+            value => convert((TSource)value!));
+        (_bindings ??= new()).Add((sourceProperty.Id, entry));
+    }
+
+    /// <summary>
     /// Keeps the same property of a target part in sync with <see cref="Owner"/>.
     /// </summary>
     /// <param name="target">The template part to update.</param>

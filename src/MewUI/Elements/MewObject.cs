@@ -1056,10 +1056,11 @@ public abstract class MewObject : IPropertyOwner
         int sourcePropertyId,
         MewObject target,
         MewProperty targetProperty,
-        ValueSource targetSource = ValueSource.Binding)
+        ValueSource targetSource = ValueSource.Binding,
+        Func<object?, object?>? convert = null)
     {
         _propertyForwards ??= new(capacity: 2);
-        var entry = new PropertyForwardEntry(target, targetProperty, targetSource);
+        var entry = new PropertyForwardEntry(target, targetProperty, targetSource, convert);
         if (_propertyForwards.TryGetValue(sourcePropertyId, out var existing))
         {
             if (existing is List<PropertyForwardEntry> list)
@@ -1191,15 +1192,18 @@ public abstract class MewObject : IPropertyOwner
 internal sealed class PropertyForwardEntry
 {
     private readonly WeakReference<MewObject> _target;
+    private readonly Func<object?, object?>? _convert;
 
     public PropertyForwardEntry(
         MewObject target,
         MewProperty targetProperty,
-        ValueSource targetSource)
+        ValueSource targetSource,
+        Func<object?, object?>? convert = null)
     {
         _target = new WeakReference<MewObject>(target);
         TargetProperty = targetProperty;
         TargetSource = targetSource;
+        _convert = convert;
     }
 
     public MewProperty TargetProperty { get; }
@@ -1210,6 +1214,11 @@ internal sealed class PropertyForwardEntry
 
     public void UpdateTarget(MewObject target, object? value)
     {
+        if (_convert != null)
+        {
+            value = _convert(value);
+        }
+
         if (TargetSource == ValueSource.Binding)
             target.ApplyBindingTargetValue(TargetProperty, value);
         else
