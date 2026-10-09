@@ -3118,6 +3118,39 @@ public static class ControlExtensions
         return control;
     }
 
+    /// <summary>
+    /// Configures the container of each row once its content is bound, so behavior can be attached
+    /// to the whole row rather than to the template.
+    /// </summary>
+    /// <remarks>
+    /// The callback runs on every bind, which includes scrolling one back into view, so keep it
+    /// cheap. Register event subscriptions through the supplied context and they are removed before
+    /// the next item is bound; properties assigned directly are reset by the framework instead.
+    /// </remarks>
+    /// <typeparam name="T">Item type.</typeparam>
+    public static NavigationList PrepareContainer<T>(this NavigationList navigationList, PrepareContainerHandler<ItemContainer, T> prepare)
+    {
+        ArgumentNullException.ThrowIfNull(navigationList);
+        ArgumentNullException.ThrowIfNull(prepare);
+
+        navigationList.SetPrepareContainer((container, item, index, context) => prepare(container, (T)item!, index, context));
+        return navigationList;
+    }
+
+    /// <summary>
+    /// Releases what <see cref="PrepareContainer{T}(NavigationList, PrepareContainerHandler{ItemContainer, T})"/>
+    /// attached outside the template context, before the container takes another item.
+    /// </summary>
+    /// <typeparam name="T">Item type.</typeparam>
+    public static NavigationList ClearContainer<T>(this NavigationList navigationList, PrepareContainerHandler<ItemContainer, T> clear)
+    {
+        ArgumentNullException.ThrowIfNull(navigationList);
+        ArgumentNullException.ThrowIfNull(clear);
+
+        navigationList.SetClearContainer((container, item, index, context) => clear(container, (T)item!, index, context));
+        return navigationList;
+    }
+
     #endregion
 
     #region NavigationView
@@ -4372,6 +4405,39 @@ public static class ControlExtensions
     public static ComboBox ItemHeight(this ComboBox comboBox, double value)
     {
         comboBox.ItemHeight = value;
+        return comboBox;
+    }
+
+    /// <summary>
+    /// Configures the container of each drop-down item once its content is bound, so behavior can be attached
+    /// to the whole drop-down item rather than to the template.
+    /// </summary>
+    /// <remarks>
+    /// The callback runs on every bind, which includes scrolling one back into view, so keep it
+    /// cheap. Register event subscriptions through the supplied context and they are removed before
+    /// the next item is bound; properties assigned directly are reset by the framework instead.
+    /// </remarks>
+    /// <typeparam name="T">Item type.</typeparam>
+    public static ComboBox PrepareContainer<T>(this ComboBox comboBox, PrepareContainerHandler<ItemContainer, T> prepare)
+    {
+        ArgumentNullException.ThrowIfNull(comboBox);
+        ArgumentNullException.ThrowIfNull(prepare);
+
+        comboBox.SetPrepareContainer((container, item, index, context) => prepare(container, (T)item!, index, context));
+        return comboBox;
+    }
+
+    /// <summary>
+    /// Releases what <see cref="PrepareContainer{T}(ComboBox, PrepareContainerHandler{ItemContainer, T})"/>
+    /// attached outside the template context, before the container takes another item.
+    /// </summary>
+    /// <typeparam name="T">Item type.</typeparam>
+    public static ComboBox ClearContainer<T>(this ComboBox comboBox, PrepareContainerHandler<ItemContainer, T> clear)
+    {
+        ArgumentNullException.ThrowIfNull(comboBox);
+        ArgumentNullException.ThrowIfNull(clear);
+
+        comboBox.SetClearContainer((container, item, index, context) => clear(container, (T)item!, index, context));
         return comboBox;
     }
 

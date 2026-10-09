@@ -501,7 +501,39 @@ public sealed partial class ComboBox : DropDownBase, ISelector, IIndexedSelector
         _popupList.ZebraStriping = ZebraStriping;
         _popupList.SelectionChanged += OnPopupListSelectionChanged;
         _popupList.ItemActivated += OnPopupListItemActivated;
+        if (_prepareContainer != null)
+        {
+            _popupList.SetPrepareContainer(_prepareContainer);
+        }
+
+        if (_clearContainer != null)
+        {
+            _popupList.SetClearContainer(_clearContainer);
+        }
+
         return _popupList;
+    }
+
+    private PrepareContainerHandler<ItemContainer, object?>? _prepareContainer;
+    private PrepareContainerHandler<ItemContainer, object?>? _clearContainer;
+
+    /// <summary>
+    /// Sets the container-prepare hook of the drop-down list, now if it exists and otherwise when
+    /// it is created. Use the typed <c>PrepareContainer</c> extension.
+    /// </summary>
+    internal void SetPrepareContainer(PrepareContainerHandler<ItemContainer, object?>? hook)
+    {
+        _prepareContainer = hook;
+        _popupList?.SetPrepareContainer(hook);
+    }
+
+    /// <summary>
+    /// Sets the container-clear hook of the drop-down list. Use the typed <c>ClearContainer</c> extension.
+    /// </summary>
+    internal void SetClearContainer(PrepareContainerHandler<ItemContainer, object?>? hook)
+    {
+        _clearContainer = hook;
+        _popupList?.SetClearContainer(hook);
     }
 
     private void OnPopupListSelectionChanged(object? _)
