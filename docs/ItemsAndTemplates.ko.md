@@ -96,7 +96,7 @@ public sealed class TemplateContext : IDisposable
 }
 ```
 
-이름은 `Build`에서 등록하고 `Bind`에서 조회한다.
+이름은 `Build`에서 등록하고 `Bind`에서 조회한다. 이름은 컨텍스트 하나 안에서 유일하다. 같은 이름을 두 번 등록하거나, 없는 이름 또는 타입이 다른 이름을 조회하면 `InvalidOperationException`이 발생한다.
 
 ```csharp
 ctx.Get<TextBlock>("Name").Text = item.Name;
@@ -162,11 +162,14 @@ list.PrepareContainer<ChatMessage>((container, message, index, ctx) => container
 
 | 컨트롤 | 컨테이너 | 훅이 없을 때 |
 |---|---|---|
-| `ListBox`, `ItemsControl` | `ItemContainer`. 템플릿 루트를 감싼다 | 같은 컨테이너. 아이템의 선택과 호버도 그리므로 항상 있다 |
-| `TreeView` | `ItemContainer`. 들여쓰기와 확장기까지 행 전체를 덮고 콘텐츠를 그 뒤로 밀어 넣는다 | 템플릿 루트가 콘텐츠 구간에만 놓임 |
+| `ListBox`, `ItemsControl`, `NavigationList` | `ItemContainer`. 템플릿 루트를 감싼다 | 같은 컨테이너. 아이템의 선택과 호버도 그리므로 항상 있다 |
+| `TreeView` | `ItemContainer`. 들여쓰기와 확장기까지 행 전체를 덮고 콘텐츠를 그 뒤로 밀어 넣는다 | 같은 컨테이너 |
 | `GridView` | `GridViewRow`. 항상 있는 행 요소를 그대로 넘긴다 | 변화 없음 |
+| `ComboBox` | 드롭다운 목록의 `ItemContainer` | 같은 컨테이너 |
 
 훅을 등록하거나 해제하면 컨테이너가 새로 만들어진다.
+
+훅 밖에서 특정 아이템을 보여 주는 컨테이너에 닿으려면 컨트롤에 묻는다: `TryGetContainer(index, out container)`. 스크롤로 벗어난 아이템처럼 실현되지 않은 아이템에는 false를 돌려주므로, 필요하면 먼저 스크롤해 보이게 한다. 컨테이너는 재사용되므로 결과를 보관하지 말고 바로 쓴다. `GridViewRow`는 `TryGetCell(columnIndex, out view, out context)`로 한 열의 셀 뷰와 컨텍스트를 준다.
 
 ### 컨테이너가 알려주는 것
 
@@ -252,6 +255,8 @@ new ComboBox().Items(people, p => p.Name);
 
 `Items(...)`의 두 번째 인자는 기본 템플릿에서 사용하는 텍스트 선택기다.
 
+헤더에서 선택 아이템을 보여 주는 뷰는 `ComboBox.SelectedItemViewProperty`라는 슬롯이기도 하다. ComboBox의 컨트롤 템플릿은 `new ContentPresenter { ContentSource = ComboBox.SelectedItemViewProperty }`로 그 뷰를 배치한다. 선택이 없는 동안 슬롯은 비어 있다.
+
 ### TreeView
 
 ```csharp
@@ -297,19 +302,24 @@ grid.Columns(
 ## 권장 패턴
 
 1. `TemplateContext.Register`와 `Get`을 사용해 이름 기반 접근을 유지한다.
-2. 구독은 `+=`가 아니라 `TemplateContext.Subscribe`로 건다. 해제가 따라온다.
+2. 구독은 `+=`가 아니라 `TemplateContext.Subscribe`로 건다. 해제가 따라온다. 핸들러가 `Action`, `Action<T>`, `EventHandler<T>`이면 타입 인자를 적지 않는다. 람다 매개변수에 타입만 주면(`(int value) => ...`) 나머지는 추론된다. `INotifyPropertyChanged`를 구현한 아이템은 `ctx.Subscribe(item, (_, args) => ...)`만 쓰면 된다.
 3. `Bind`에서 무거운 객체 생성을 피하고 `Build`에서 준비한다.
 4. `Bind`는 동일 컨테이너에 여러 번 호출될 수 있음을 전제로 한다. 모든 속성을 조건 없이 대입한다.
 
 ## 단일 뷰 오버로드 (기본)
 
-템플릿이 단일 컨트롤만 만들고, 이름 조회나 리소스 추적이 필요 없으면 `TemplateContext`를 사용하지 않는 오버로드를 쓸 수 있다. 내부적으로는 컨텍스트가 생성되지만, 사용자 코드에서는 다루지 않는다.
+템플릿이 단일 컨트롤만 만들고 이름 조회가 필요 없으면, `build`가 돌려준 타입 그대로 루트를 `bind`에 넘겨주는 오버로드를 쓴다. 모든 아이템 컨트롤에 있다: `ListBox`, `TreeView`, `ComboBox`(`ItemTemplate`과 `SelectedItemTemplate`), `ItemsControl`, `NavigationList`, `SegmentedControl`, `ButtonGroup`, 그리고 `GridViewColumn`의 `Template`.
 
 ```csharp
-// 단일 뷰 생성 + 아이템만 바인딩 (context 사용 없음)
+// 단일 뷰 생성 + 아이템만 바인딩 (캐스팅 없음, context 사용 없음)
 listBox.ItemTemplate(
     build: _ => new TextBlock(),
     bind: (TextBlock view, Person item) => view.Text = item.Name);
+
+// 루트 타입을 받으면서 index와 context도 쓸 수 있다
+listBox.ItemTemplate<Person, Border>(
+    build: ctx => new Border().Child(new TextBlock().Register(ctx, "Name")),
+    bind: (root, person, index, ctx) => ctx.Get<TextBlock>("Name").Text = person.Name);
 ```
 
 일반적인 케이스를 단순하게 유지하면서 동일한 템플릿 파이프라인을 사용한다.

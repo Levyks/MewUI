@@ -46,13 +46,16 @@ host.Template = template;                // apply; the build happens lazily on t
 1. **Parts exist from `OnApplyTemplate` on.** Assigning `Template` only schedules the build
    (lazy, on the next measure); `GetTemplateChild` returns null in the constructor or right
    after the assignment.
-2. **`Build` runs after the control is attached to the tree and its style is resolved.** It is
-   therefore safe to read theme/DPI values inside `Build`; baking them in is fine because a
-   theme change rebuilds the tree.
-3. **Replacement and a theme swap are tree-death events.** The previous tree detaches (focus
-   inside it is released safely) and a new tree builds on the next measure. Transient part
-   state (in-progress text, scroll position, ...) is lost at that point, so **state that must
-   survive belongs on control properties (logical), not on parts.**
+2. **`Build` runs after the control is attached to the tree and its style is resolved.** Theme
+   and DPI values can be read inside `Build`, but the tree is **kept** when the theme or the DPI
+   changes, so a value read there stays as built. Let colors and metrics reach the parts through
+   styles and `ctx.Bind` instead. A template whose build has to compute them into the tree asks
+   for a rebuild: `new DelegateControlTemplate<T>(Build) { RebuildOnThemeChange = true,
+   RebuildOnDpiChange = true }`.
+3. **Replacement and a requested rebuild are tree-death events.** The previous tree detaches
+   (focus inside it is released safely) and a new tree builds on the next measure. Transient
+   part state (in-progress text, scroll position, ...) is lost at that point, so **state that
+   must survive belongs on control properties (logical), not on parts.**
 
 Once applied, measure, arrange, render, hit testing and tree traversal all flow through **the
 single template root**; the control's own visual implementation does not run.
@@ -163,12 +166,15 @@ property - the counterpart of WPF's `TemplateBinding`.
 ```csharp
 ctx.Bind(part, targetProperty, sourceProperty);   // the source is always the template's owner
 ctx.Bind(part, property);                         // shorthand when both sides are the same property
+ctx.Bind(part, targetProperty, sourceProperty, value => /* ... */);   // the part takes a converted value
 ```
 
 - Applies the current value immediately at connection time and keeps forwarding changes.
-- One-way (owner -> part) with no value conversion. The semantics are "the part reflects state
-  the owner exposes"; a part that needs the reverse direction (an edit text box, for example)
-  should have the control subscribe to part events in `OnApplyTemplate` instead.
+- One-way (owner -> part). The semantics are "the part reflects state the owner exposes"; a
+  part that needs the reverse direction (an edit text box, for example) should have the control
+  subscribe to part events in `OnApplyTemplate` instead.
+- The converting overload lets one owner property drive parts differently, for example an
+  `IsEditing` flag that shows one part and fades another.
 - Released automatically when the template is torn down.
 - Style triggers and transitions keep working: triggers write to the owner's properties, and
   the binding forwards every animation tick to the part, so color transitions stay smooth.

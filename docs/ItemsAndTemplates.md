@@ -96,7 +96,7 @@ public sealed class TemplateContext : IDisposable
 }
 ```
 
-Register names in `Build`, look them up in `Bind`:
+Register names in `Build`, look them up in `Bind`. A name is unique within one context: registering it twice, or looking up a name that is missing or of another type, throws `InvalidOperationException`.
 
 ```csharp
 ctx.Get<TextBlock>("Name").Text = item.Name;
@@ -162,11 +162,14 @@ The callback receives `(container, item, index, context)` and runs after the tem
 
 | Control | Container | Without a hook |
 |---|---|---|
-| `ListBox`, `ItemsControl` | `ItemContainer` around the template root | The same container. It also paints the item's selection and hover, so it is always there |
-| `TreeView` | `ItemContainer` covering the whole row, indent and expander included, with the content padded past them | The template root sits in the content area only |
+| `ListBox`, `ItemsControl`, `NavigationList` | `ItemContainer` around the template root | The same container. It also paints the item's selection and hover, so it is always there |
+| `TreeView` | `ItemContainer` covering the whole row, indent and expander included, with the content padded past them | The same container |
 | `GridView` | `GridViewRow`, the row element the grid always has | Unchanged |
+| `ComboBox` | `ItemContainer` of the drop-down list | The same container |
 
 Registering or removing a hook rebuilds the containers.
+
+To reach the container showing one item from outside a hook, ask the control: `TryGetContainer(index, out container)`. It returns false for an item that is not realized, such as one scrolled out of view, so scroll it into view first when needed. Containers are recycled, so use the result right away rather than keeping it. A `GridViewRow` gives the view and context of one column's cell with `TryGetCell(columnIndex, out view, out context)`.
 
 ### What the container tells you
 
@@ -253,6 +256,8 @@ new ComboBox().Items(people, p => p.Name);
 
 The second argument of `Items(...)` is a text selector used by the default template.
 
+The view that presents the selected item in the header is also a slot, `ComboBox.SelectedItemViewProperty`. A control template for the ComboBox places it with `new ContentPresenter { ContentSource = ComboBox.SelectedItemViewProperty }`; the slot is empty while nothing is selected.
+
 ### TreeView
 
 ```csharp
@@ -300,19 +305,24 @@ This keeps the behavior consistent while allowing users to override with templat
 ## Recommended Patterns
 
 1. Use `TemplateContext.Register` and `Get` for named elements.
-2. Subscribe with `TemplateContext.Subscribe` rather than `+=`, so removal is handled for you.
+2. Subscribe with `TemplateContext.Subscribe` rather than `+=`, so removal is handled for you. Handlers of type `Action`, `Action<T>` and `EventHandler<T>` need no type arguments; give the lambda's parameters their types (`(int value) => ...`) and the rest is inferred. For an item that implements `INotifyPropertyChanged`, `ctx.Subscribe(item, (_, args) => ...)` is enough.
 3. Avoid creating heavy objects during `Bind`; reuse in `Build`.
 4. Always assume `Bind` can be called repeatedly on the same container, and assign every property unconditionally.
 
 ## Simplified Overloads (Single View)
 
-When your template builds a single control and you do not need named lookup or tracked disposables, you can use overloads that ignore `TemplateContext` in the user code. The context is still created internally, but you do not need to use it.
+When your template builds a single control and you do not need named lookup, use the overloads that hand `bind` the root as the type `build` returned. Every item control has them: `ListBox`, `TreeView`, `ComboBox` (`ItemTemplate` and `SelectedItemTemplate`), `ItemsControl`, `NavigationList`, `SegmentedControl`, `ButtonGroup`, and `GridViewColumn` as `Template`.
 
 ```csharp
-// Build a single view and bind only the item (no context usage).
+// Build a single view and bind only the item (no cast, no context).
 listBox.ItemTemplate(
     build: _ => new TextBlock(),
     bind: (TextBlock view, Person item) => view.Text = item.Name);
+
+// The index and the context are still available with the typed root.
+listBox.ItemTemplate<Person, Border>(
+    build: ctx => new Border().Child(new TextBlock().Register(ctx, "Name")),
+    bind: (root, person, index, ctx) => ctx.Get<TextBlock>("Name").Text = person.Name);
 ```
 
 This keeps the API simple for common cases while preserving the same template pipeline.

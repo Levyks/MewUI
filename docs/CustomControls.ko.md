@@ -171,7 +171,7 @@ public MyItem()
 - `DelegateControlTemplate<TControl>`은 빌드 함수 `(owner, context) => root`를 받습니다. 템플릿 객체 하나를 여러 컨트롤에 적용할 수 있으며, 적용할 때마다 독립된 트리를 빌드합니다.
 - 빌드 함수에서 `context.Register(name, element)`는 이름 있는 파트를 등록하고, `context.Bind(target, targetProperty, sourceProperty)`는 파트의 속성을 소유 컨트롤의 속성과 동기화하며, `context.BindChrome(target)`은 `Background`, `BorderBrush`, `BorderThickness`, `CornerRadius`를 크롬을 그리는 파트로 전달합니다.
 - 템플릿 안의 `ContentPresenter`는 소유 컨트롤의 요소 슬롯을 표시합니다. `ContentSource`를 지정하지 않으면 소유 컨트롤이 `ContentControl`일 때 그 표시 콘텐츠를 보여 주고, 콘텐츠 슬롯이 없는 컨트롤에서는 비어 있습니다. 다른 요소 타입 속성을 보여 주려면 `ContentSource`를 지정합니다.
-- 컨트롤은 `OnApplyTemplate()`에서 `GetTemplateChild<T>(name)`으로 파트를 찾습니다. 파트가 없으면 `null`을 반환합니다. 템플릿은 첫 측정 때 빌드되고 `Template`, 테마, DPI가 바뀌면 **다시 빌드**되므로 `OnApplyTemplate`도 그때마다 다시 실행됩니다. 새 파트를 가져오기 전에 이전 파트에서 가져온 것(이벤트 핸들러)을 해제합니다.
+- 컨트롤은 `OnApplyTemplate()`에서 `GetTemplateChild<T>(name)`으로 파트를 찾습니다. 파트가 없으면 `null`을 반환합니다. 템플릿은 첫 측정 때 빌드되고, `Template`이 바뀌거나 템플릿이 `RebuildOnThemeChange` / `RebuildOnDpiChange`를 켠 상태에서 테마나 DPI가 바뀌면 **다시 빌드**되므로 `OnApplyTemplate`도 다시 실행될 수 있습니다. 새 파트를 가져오기 전에 이전 파트에서 가져온 것(이벤트 핸들러)을 해제합니다.
 - `Template`은 `MewProperty`입니다. 직접 대입할 수도 있고, 스타일에서 `Setter.Create(Control.TemplateProperty, (ControlTemplate?)template)`으로 제공할 수도 있습니다. 기본 제공 `NumericUpDown`은 스타일 setter로 템플릿을 받습니다. 직접 대입한 템플릿은 로컬 값이므로 스타일보다 우선합니다.
 
 ```csharp
