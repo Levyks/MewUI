@@ -20,34 +20,39 @@ public sealed class TemplateContext : IDisposable
     private int _boundIndex = -1;
 
     /// <summary>
-    /// Names an element for later <see cref="Get{T}"/>, replacing any element already under that
-    /// name. Names outlive <see cref="Reset"/>, so registering once from the build step is enough.
+    /// Names an element for later <see cref="Get{T}"/>. Names are unique within one context and
+    /// outlive <see cref="Reset"/>, so register once from the build step.
     /// </summary>
+    /// <exception cref="InvalidOperationException">An element is already registered under that name.</exception>
     public void Register<T>(string name, T element) where T : UIElement
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
         ArgumentNullException.ThrowIfNull(element);
 
-        _namedElements[name] = element;
+        if (!_namedElements.TryAdd(name, element))
+        {
+            throw new InvalidOperationException($"An element named '{name}' is already registered.");
+        }
     }
 
     /// <summary>
     /// Returns the element registered under <paramref name="name"/>.
     /// </summary>
-    /// <exception cref="KeyNotFoundException">No element is registered under that name.</exception>
-    /// <exception cref="InvalidCastException">The registered element is not a <typeparamref name="T"/>.</exception>
+    /// <exception cref="InvalidOperationException">
+    /// No element is registered under that name, or it is not a <typeparamref name="T"/>.
+    /// </exception>
     public T Get<T>(string name) where T : UIElement
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
         if (!_namedElements.TryGetValue(name, out var element))
         {
-            throw new KeyNotFoundException($"TemplateContext has no element named '{name}'.");
+            throw new InvalidOperationException($"No element named '{name}' is registered.");
         }
 
         if (element is not T typed)
         {
-            throw new InvalidCastException($"TemplateContext element '{name}' is '{element.GetType().Name}', not '{typeof(T).Name}'.");
+            throw new InvalidOperationException($"The element named '{name}' is a {element.GetType().Name}, not a {typeof(T).Name}.");
         }
 
         return typed;
