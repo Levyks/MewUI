@@ -482,9 +482,9 @@ partial class GalleryView
                     ctx.Get<TextBlock>("Text").Text(item.Name);
 
                     var loading = ctx.Get<ProgressIndicator>("Loading");
-                    icon.BindIsVisible(item.IsLoading, isLoading => !isLoading);
-                    loading.Bind(ProgressIndicator.IsActiveProperty, item.IsLoading);
-                    loading.BindIsVisible(item.IsLoading);
+                    ctx.Bind(icon, UIElement.IsVisibleProperty, item.IsLoading, isLoading => !isLoading);
+                    ctx.Bind(loading, ProgressIndicator.IsActiveProperty, item.IsLoading);
+                    ctx.Bind(loading, UIElement.IsVisibleProperty, item.IsLoading);
                 });
 
             return new DockPanel()
