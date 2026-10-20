@@ -818,6 +818,12 @@ public partial class Window : ContentControl, ILayoutRoundingHost
     internal bool IsInputTransparentSurface { get; set; }
 
     /// <summary>
+    /// Whether this window is an invisible framework-owned host window (e.g. tray popup anchor) that
+    /// should not appear in <see cref="Application.AllWindows"/> or count toward shutdown policy.
+    /// </summary>
+    internal bool IsInternalInfrastructureWindow { get; init; }
+
+    /// <summary>
     /// Whether this window is a chrome-less surface: no native title bar, border, shadow, or close
     /// affordance - the framework draws everything. Backends consult this where OS chrome machinery
     /// would otherwise engage (style mask selection, close path that requires a close affordance).
@@ -1510,6 +1516,11 @@ public partial class Window : ContentControl, ILayoutRoundingHost
             SubscribeToDispatcherChanged();
         }
     }
+
+    /// <summary>
+    /// Gets whether the window is currently shown on screen (not hidden or closed).
+    /// </summary>
+    public bool IsShown => _lifetimeState == WindowLifetimeState.Shown;
 
     /// <summary>
     /// Hides the window.
@@ -3690,6 +3701,8 @@ public partial class Window : ContentControl, ILayoutRoundingHost
             _adorners[i].Element.ClearDpiCacheDeep();
         }
     }
+
+    internal bool HasActivePopups => _popupManager.HasAny;
 
     internal void CloseAllPopups()
         => _popupManager.CloseAllPopups();

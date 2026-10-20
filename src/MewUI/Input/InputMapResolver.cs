@@ -97,6 +97,30 @@ internal static class InputMapResolver
         => TryGetEffectiveSequence(window, command, origin, data, out var sequence) ? sequence.ToDisplayString() : null;
 
     /// <summary>
+    /// The shortcut label the application-level input map gives a command, for menus shown outside any
+    /// window (a native tray menu) where no window or context chain can refine the lookup.
+    /// </summary>
+    internal static string? GetApplicationGestureText(Command command, object? data = null)
+    {
+        if (Application.CurrentInputMapOrNull is not InputMap map || map.GetSequences(command) is not { } sequences)
+        {
+            return null;
+        }
+
+        foreach (var candidate in sequences)
+        {
+            if (map.Match(candidate.Resolve(), out var entry) == InputMapMatch.Exact &&
+                ReferenceEquals(entry.Command, command) &&
+                Equals(entry.Data, data))
+            {
+                return candidate.ToDisplayString();
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
     /// Finds the single gesture the given command would actually respond to for the origin context,
     /// consistent with forward key resolution; false when it answers only to a longer sequence.
     /// </summary>

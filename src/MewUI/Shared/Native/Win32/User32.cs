@@ -483,4 +483,43 @@ internal static partial class User32
     public const uint SPI_GETNONCLIENTMETRICS = 0x0029;
 
     #endregion
+
+    #region Menus and Broadcast Messages
+
+    public const uint MF_STRING = 0x00000000;
+    public const uint MF_GRAYED = 0x00000001;
+    public const uint MF_DISABLED = 0x00000002;
+    public const uint MF_CHECKED = 0x00000008;
+    public const uint MF_POPUP = 0x00000010;
+    public const uint MF_SEPARATOR = 0x00000800;
+
+    public const uint TPM_RIGHTBUTTON = 0x0002;
+    public const uint TPM_NONOTIFY = 0x0080;
+    public const uint TPM_RETURNCMD = 0x0100;
+
+    [LibraryImport(LibraryName, SetLastError = true)]
+    public static partial nint CreatePopupMenu();
+
+    [LibraryImport(LibraryName, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool DestroyMenu(nint hMenu);
+
+    [LibraryImport(LibraryName, EntryPoint = "AppendMenuW", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool AppendMenu(nint hMenu, uint uFlags, nuint uIDNewItem, string? lpNewItem);
+
+    [LibraryImport(LibraryName, SetLastError = true)]
+    public static partial uint TrackPopupMenuEx(nint hMenu, uint fuFlags, int x, int y, nint hwnd, nint lptpm);
+
+    [LibraryImport(LibraryName, EntryPoint = "RegisterWindowMessageW", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
+    public static partial uint RegisterWindowMessage(string lpString);
+
+    public const uint MSGFLT_ALLOW = 1;
+
+    /// <summary>Lets a lower-integrity sender (the shell, when this process is elevated) post a message to the window.</summary>
+    [LibraryImport(LibraryName)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool ChangeWindowMessageFilterEx(nint hwnd, uint message, uint action, nint pChangeFilterStruct);
+
+    #endregion
 }

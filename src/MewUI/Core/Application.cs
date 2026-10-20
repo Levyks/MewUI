@@ -294,6 +294,8 @@ public sealed class Application
     // Register() call in Main; the wrap is applied when the host is finally resolved.
     internal static Func<IPlatformHost, IPlatformHost>? PlatformHostInterceptor { get; set; }
 
+    internal static bool HasRegisteredPlatformHost => _platformHostProvider != null;
+
     internal static IPlatformHost DefaultPlatformHost
     {
         get
@@ -633,6 +635,10 @@ public sealed class Application
     // The shutdown decision is owned by ApplicationRuntime (policy-driven, one place) rather than each
     // platform host; hosts only maintain their own hwnd registry for routing.
     internal void UnregisterWindow(Window window) => _runtime?.Unregister(window, ShutdownMode);
+
+    internal void RegisterTrayIcon(TrayIcon trayIcon) => _runtime?.RegisterTrayIcon(trayIcon);
+
+    internal void UnregisterTrayIcon(TrayIcon trayIcon) => _runtime?.UnregisterTrayIcon(trayIcon);
 
     // Pure decision so the policy is unit-testable in isolation.
     internal static bool ShouldShutdownAfterClose(ShutdownMode mode, bool wasMainWindow, int remainingWindows)

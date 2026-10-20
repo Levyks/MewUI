@@ -33,6 +33,10 @@ internal sealed class TracingPlatformHost : IPlatformHost
         return new TracingDispatcher(dispatcher, windowHandle);
     }
 
+    public bool SupportsTrayIcon => _inner.SupportsTrayIcon;
+
+    public ITrayIconBackend? CreateTrayIconBackend(TrayIcon trayIcon) => _inner.CreateTrayIconBackend(trayIcon);
+
     public uint GetSystemDpi() => _inner.GetSystemDpi();
 
     public ThemeVariant GetSystemThemeVariant() => _inner.GetSystemThemeVariant();

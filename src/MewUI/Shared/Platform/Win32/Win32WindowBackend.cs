@@ -1427,7 +1427,7 @@ internal sealed class Win32WindowBackend : IWindowBackend
         User32.SendMessage(Handle, WindowMessages.WM_SETICON, (nint)ICON_BIG, _hIconBig);
     }
 
-    private static nint TryCreateIcon(IconSource icon, int desiredSizePx)
+    internal static nint TryCreateIcon(IconSource icon, int desiredSizePx)
     {
         if (!icon.TryGetPixels(desiredSizePx, out var bmp))
         {
@@ -1576,6 +1576,15 @@ internal sealed class Win32WindowBackend : IWindowBackend
         if (Window.ShowInTaskbar)
         {
             exStyle |= WindowStylesEx.WS_EX_APPWINDOW;
+        }
+
+        if (Window.IsInternalInfrastructureWindow)
+        {
+            // Invisible 1x1 anchor: out of the taskbar and Alt-Tab, never hit by the mouse. Unlike a popup
+            // surface it stays activatable - a tray menu needs the foreground for keyboard focus and for
+            // its deactivation dismiss.
+            exStyle |= WindowStylesEx.WS_EX_TOOLWINDOW | WindowStylesEx.WS_EX_TRANSPARENT;
+            exStyle &= ~WindowStylesEx.WS_EX_APPWINDOW;
         }
 
         switch (Window.Kind)

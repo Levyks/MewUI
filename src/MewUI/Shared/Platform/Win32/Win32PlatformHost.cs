@@ -17,6 +17,7 @@ public sealed class Win32PlatformHost : IPlatformHost
     internal const string WindowClassName = "AprillzMewUIWindow";
 
     private readonly Dictionary<nint, Win32WindowBackend> _windows = new();
+    private readonly Dictionary<nint, Win32TrayIconBackend> _trayWindows = new();
     private readonly List<Win32WindowBackend> _renderBackends = new(capacity: 8);
     private WndProc? _wndProcDelegate;
     private bool _running;
@@ -116,6 +117,10 @@ public sealed class Win32PlatformHost : IPlatformHost
 
     public IWindowBackend CreateWindowBackend(Window window) => new Win32WindowBackend(this, window);
 
+    bool IPlatformHost.SupportsTrayIcon => true;
+
+    ITrayIconBackend? IPlatformHost.CreateTrayIconBackend(TrayIcon trayIcon) => new Win32TrayIconBackend(this, trayIcon);
+
     public IDispatcher CreateDispatcher(nint windowHandle) => new Win32Dispatcher(windowHandle);
 
     public uint GetSystemDpi() => Win32DpiApiResolver.GetSystemDpi();
@@ -168,6 +173,10 @@ public sealed class Win32PlatformHost : IPlatformHost
         // host only drops its routing entry here.
         _windows.Remove(hwnd);
     }
+
+    internal void RegisterTrayWindow(nint hwnd, Win32TrayIconBackend backend) => _trayWindows[hwnd] = backend;
+
+    internal void UnregisterTrayWindow(nint hwnd) => _trayWindows.Remove(hwnd);
 
     public void Run(Application app, Window? mainWindow)
     {
@@ -456,17 +465,37 @@ public sealed class Win32PlatformHost : IPlatformHost
             }
             catch (Exception ex)
             {
-                if (!Application.Current.TryHandleDispatcherException(ex))
-                {
-                    Application.Current.NotifyFatalDispatcherException(ex);
-                    _running = false;
-                    User32.PostQuitMessage(0);
-                }
-                return 0;
+                return HandleDispatchException(ex);
+            }
+        }
+
+        if (_trayWindows.TryGetValue(hWnd, out var trayBackend))
+        {
+            try
+            {
+                return trayBackend.ProcessMessage(msg, wParam, lParam);
+            }
+            catch (Exception ex)
+            {
+                return HandleDispatchException(ex);
             }
         }
 
         return User32.DefWindowProc(hWnd, msg, wParam, lParam);
+    }
+
+    // An exception thrown while handling a native message goes through the application's dispatcher
+    // exception policy; an unhandled one ends the run.
+    private nint HandleDispatchException(Exception ex)
+    {
+        if (!Application.Current.TryHandleDispatcherException(ex))
+        {
+            Application.Current.NotifyFatalDispatcherException(ex);
+            _running = false;
+            User32.PostQuitMessage(0);
+        }
+
+        return 0;
     }
 
     internal void RequestRender()
